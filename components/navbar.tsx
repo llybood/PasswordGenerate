@@ -1,3 +1,5 @@
+'use client';
+
 import {
 	Navbar as NextUINavbar,
 	NavbarContent,
@@ -19,34 +21,21 @@ import {
 } from "@/components/icons";
 
 import { Logo } from "@/components/icons";
+import Menu from "@/components/menu";
+import {title} from "@/components/primitives";
 
 export const Navbar = () => {
 
 	return (
-		<NextUINavbar maxWidth="xl" position="sticky">
+		<NextUINavbar maxWidth="full" position="static">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
-					<NextLink className="flex justify-start items-center gap-1" href="/">
-						<Logo />
-						<p className="font-bold text-inherit">MENU</p>
-					</NextLink>
+					<Menu />
 				</NavbarBrand>
-				<ul className="hidden lg:flex gap-4 justify-start ml-2">
-					{siteConfig.navItems.map((item) => (
-						<NavbarItem key={item.href}>
-							<NextLink
-								className={clsx(
-									linkStyles({ color: "foreground" }),
-									"data-[active=true]:text-primary data-[active=true]:font-medium"
-								)}
-								color="foreground"
-								href={item.href}
-							>
-								{item.label}
-							</NextLink>
-						</NavbarItem>
-					))}
-				</ul>
+			</NavbarContent>
+
+			<NavbarContent className="basis-1/5 sm:basis-full" justify="center">
+				<h1 className="font-bold normal-case text-lg sm:text-3xl max-w-[66vw] sm:max-w-full truncate">Random Password Generator</h1>
 			</NavbarContent>
 
 			<NavbarContent
@@ -66,7 +55,6 @@ export const Navbar = () => {
 					<GithubIcon className="text-default-500" />
 				</Link>
 				<ThemeSwitch />
-				<NavbarMenuToggle />
 			</NavbarContent>
 
 

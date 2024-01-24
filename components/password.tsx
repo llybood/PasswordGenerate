@@ -1,22 +1,20 @@
 "use client";
 
-import { useState } from 'react';
-import { Switch, Spacer, Button, Input } from '@nextui-org/react';
+import React, { useEffect, useState } from 'react';
+import { Button, Slider, Textarea } from '@nextui-org/react';
 import CustomSwitch from "@/components/custom-switch";
-import PasswordTextarea from "@/components/password-textarea";
+import toast, { Toaster } from 'react-hot-toast';
 
 export const Password = () => {
-        const [options, setOptions] = useState({
-            uppercase: false,
-            numbers: false,
-            lowercase: false,
-            symbols: false,
-        });
-        const [passwordLength, setPasswordLength] = useState(8);
-        const [generatedPassword, setGeneratedPassword] = useState('');
-        const [isCopied, setIsCopied] = useState(false);
-
-
+    const [options, setOptions] = useState({
+        uppercase: true,
+        numbers: true,
+        lowercase: true,
+        symbols: true,
+    });
+    const [passwordLength, setPasswordLength] = useState(16);
+    const [passwordNumber, setPasswordNumber] = useState(1);
+    const [generatedPassword, setGeneratedPassword] = useState('');
 
     const handleOptionChange = (option: keyof typeof options) => {
             setOptions((prevOptions) => ({
@@ -25,86 +23,147 @@ export const Password = () => {
             }));
         };
 
-        const handleLengthChange = (length: number) => {
-            setPasswordLength(length);
-        };
+    // 选项改变时, 触发生成密码
+    useEffect(() => {
+        generateMultiplePasswords();
+    }, [options]);
 
-        const generatePassword = () => {
-            // 生成密码的逻辑
-            let characters = '';
-            if (options.uppercase) characters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            if (options.numbers) characters += '1234567890';
-            if (options.lowercase) characters += 'abcdefghijklmnopqrstuvwxyz';
-            if (options.symbols) characters += '!@#$%^&*()';
+    // 组件加载时, 触发生成密码
+    useEffect(() => {
+        generateMultiplePasswords();
+    }, []);
 
-            let password = '';
-            for (let i = 0; i < passwordLength; i++) {
-                try {
-                    const randomIndex = Math.floor(Math.random() * characters.length);
-                    password += characters[randomIndex];
-                } catch (error) {
-                    password = 'the token';
-                }
-            }
+    // 密码长度改变时,触发生成密码
+    useEffect(() => {
+        generateMultiplePasswords();
+    }, [passwordLength]);
 
-            setGeneratedPassword(password);
-        };
+    // 密码数量改变时,触发生成密码
+    useEffect(() => {
+        generateMultiplePasswords();
+    }, [passwordNumber]);
 
-        const copyToClipboard = async () => {
-            try {
-                await navigator.clipboard.writeText(generatedPassword);
-                setIsCopied(true);
-            } catch (error) {
+    // 按下回车键,触发生成密码
+    const handleKeyDown = (event: any) => {
+        if (event.key === 'Enter') {
+            generateMultiplePasswords();
+        }
+    };
+
+    // 根据选项的状态,生成密码
+    const generatePassword = () => {
+        // 生成密码的逻辑
+        let characters = '';
+        if (options.uppercase) characters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (options.numbers) characters += '1234567890';
+        if (options.lowercase) characters += 'abcdefghijklmnopqrstuvwxyz';
+        if (options.symbols) characters += '~!@#$%^&*(){}[]+-';
+
+        let password = ''
+        if (!options.uppercase && !options.lowercase && !options.numbers && !options.symbols) {
+            return 'Please specify an option...';
+        }
+        for (let i = 0; i < passwordLength; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            password += characters[randomIndex];
+        }
+        return password;
+    };
+
+    // 生成多个密码
+    const generateMultiplePasswords = () => {
+        let passwords = '';
+
+        for (let i = 0; i < passwordNumber; i++) {
+            const password = generatePassword();
+            passwords += password + '\n'
+        }
+
+        setGeneratedPassword(passwords.slice(0, -1));
+    };
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(generatedPassword);
+            toast.success('Password Copied');
+        } catch (error) {
                 console.error('Failed to copy password:', error);
             }
         };
 
         return (
             <div>
-                <div className="flex gap-6 justify-center">
+                {/* <div className="flex gap-6 flex-col justify-center md:flex-row"> */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 justify-items-center">
                     <CustomSwitch
                         name="uppercase"
                         description="ABCDEFGHIJKLMN..."
-                        // checked={options.uppercase} }}
-                        // isSelected={options.uppercase}
-                        // onChange={() => handleOptionChange('uppercase')}
-                        checked={options.uppercase}
-                        onChange={() => handleOptionChange('uppercase')}
+                        isSelected={options.uppercase}
+                        onValueChange={() => handleOptionChange('uppercase')}
                     />
                     <CustomSwitch
                         name="numbers"
                         description="0123456789"
-                        checked={options.numbers}
-                        onChange={() => handleOptionChange('numbers')}
+                        isSelected={options.numbers}
+                        onValueChange={() => handleOptionChange('numbers')}
                     />
-
                 </div>
-                <div className="flex gap-6 justify-center">
+                {/* <div className="flex gap-6 mt-4 flex-col justify-center md:flex-row"> */}
+                <div className="grid mt-4 grid-cols-1 md:grid-cols-2 gap-2 justify-items-center">
                     <CustomSwitch
                         name="lowercase"
                         description="abcdefghijklmn..."
-                        checked={options.lowercase}
-                        onChange={() => handleOptionChange('lowercase')}
+                        isSelected={options.lowercase}
+                        onValueChange={() => handleOptionChange('lowercase')}
                     />
                     <CustomSwitch
                         name="symbols"
-                        description="!@#$%^&*()"
-                        checked={options.symbols}
-                        onChange={() => handleOptionChange('symbols')}
+                        description="~!@#$%^&*(){}[]+-"
+                        isSelected={options.symbols}
+                        onValueChange={() => handleOptionChange('symbols')}
                     />
                 </div>
-                <div className="w-screen p-8 flex items-start justify-center">
-                    <PasswordTextarea
-                        password={generatedPassword}
+                <div className="grid grid-cols-1 mt-8 gap-4 justify-items-center">
+                    <Slider
+                        size="sm"
+                        label="Password Length"
+                        minValue={4}
+                        maxValue={100}
+                        className="max-w-md"
+                        value={passwordLength}
+                        onChange={(value: any) => setPasswordLength(value)}
+                    />
+                    <Slider
+                        size="sm"
+                        label="Password Number"
+                        minValue={1}
+                        maxValue={10}
+                        className="max-w-md"
+                        value={passwordNumber}
+                        onChange={(value: any) => setPasswordNumber(value)}
                     />
                 </div>
-                <div className="flex flex-wrap gap-48 justify-center">
-                    <Button onClick={generatePassword} color="success">
+
+                <div className="flex mt-8 justify-center">
+                    <Textarea
+                        isReadOnly
+                        variant="bordered"
+                        labelPlacement="outside"
+                        value={generatedPassword}
+                        className="max-w-xl"
+                    />
+                </div>
+                <div className="flex flex-wrap mt-8 gap-48 justify-center">
+                    <Button
+                        onClick={generateMultiplePasswords}
+                        color="success"
+                        onKeyDown={handleKeyDown}>
                         Generate
                     </Button>
                     <Button onClick={copyToClipboard} color="primary">
                         Copy
                     </Button>
+                    <Toaster position="bottom-center"/>
                 </div>
             </div>
         );
